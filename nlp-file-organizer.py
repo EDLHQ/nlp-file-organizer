@@ -18,8 +18,14 @@ print("Extracting words...")
 # Extract words by making in-order permutations of word characters and determining if they're words
 for file_name in file_names:
     name = os.path.splitext(file_name)[0].lower()
-    wordlist = [''.join(x) for x in everygrams(name) if ''.join(x) in nlp.vocab and len(''.join(x)) > 2]
+    wordlist = [''.join(x) for x in everygrams(name, min_len=3) if len(wn.synsets(''.join(x))) > 0]
+
+    # Backup - try the spacy web corpus if we don't find anything from wordnet
+    if len(wordlist) == 0:
+        wordlist = [''.join(x) for x in everygrams(name, min_len=3) if ''.join(x) in nlp.vocab]
+
     wordlist = wordlist[len(wordlist) - 5:len(wordlist)]
+    print("{0}: {1}".format(name, wordlist))
     mydoc = nlp(' '.join(wordlist))
     words_representatives.append((file_name, wordlist))
     feature_vecs.append(mydoc.vector)
@@ -74,7 +80,7 @@ for cluster in clusters:
         else:
             rep_word = ""
 
-        if rep_word == "" or hypernym.min_depth() < 3:
+        if rep_word == "" or hypernym.min_depth() < 2:
             rep_word = Counter(representatives).most_common(5)
             longest_most_common = ""
 
@@ -104,5 +110,20 @@ for index in range(0, len(clusters)):
             old_file_path = os.path.join(parent_directory, file_name[0])
             new_file_path = os.path.join(full_folder_path, file_name[0])
             os.rename(old_file_path, new_file_path)
+
+# Put all the stragglers in an UNCATEGORIZED directory
+remaining_files = [file_name for file_name in os.listdir(parent_directory) \
+    if os.path.isfile(os.path.join(parent_directory, file_name))]
+
+if len(remaining_files) > 0:
+    uncategorized_dir = os.path.join(parent_directory, "UNCATEGORIZED")
+    if not os.path.isdir(uncategorized_dir):
+        os.mkdir(uncategorized_dir)
+
+    for file_name in remaining_files:
+        old_file_path = os.path.join(parent_directory, file_name)
+        new_file_path = os.path.join(uncategorized_dir, file_name)
+        os.rename(old_file_path, new_file_path)
+
 
 print("Done!")
