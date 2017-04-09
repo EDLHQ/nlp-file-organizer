@@ -16,12 +16,12 @@ feature_vecs = list()
 
 print("Extracting words...")
 # Extract words by making in-order permutations of word characters and determining if they're words
-for file in file_names:
-    name = os.path.splitext(file)[0].lower()
+for file_name in file_names:
+    name = os.path.splitext(file_name)[0].lower()
     wordlist = [''.join(x) for x in everygrams(name) if ''.join(x) in nlp.vocab and len(''.join(x)) > 2]
     wordlist = wordlist[len(wordlist) - 5:len(wordlist)]
     mydoc = nlp(' '.join(wordlist))
-    words_representatives.append((file, wordlist))
+    words_representatives.append((file_name, wordlist))
     feature_vecs.append(mydoc.vector)
 
 print("Clustering...")
@@ -97,12 +97,12 @@ for index in range(0, len(clusters)):
     if folder_name != "EMPTY-CLUSTER":
         full_folder_path = os.path.join(parent_directory, folder_name)
 
-        if not os.isdir(full_folder_path):
+        if not os.path.isdir(full_folder_path):
             os.mkdir(full_folder_path)
         
-        for file in clusters[index][0]:
-            old_file_path = os.path.join(parent_directory, file)
-            new_file_path = os.path.join(full_folder_path, file)
+        for file_name in clusters[index]:
+            old_file_path = os.path.join(parent_directory, file_name[0])
+            new_file_path = os.path.join(full_folder_path, file_name[0])
             os.rename(old_file_path, new_file_path)
 
 print("Done!")
